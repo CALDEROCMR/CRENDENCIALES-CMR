@@ -39,25 +39,34 @@
   </div>
 
   <script>
+    const empleados = {
+      "EMP001": {
+        nombre: "Juan Pérez",
+        sangre: "O+",
+        nss: "123456789",
+        curp: "JUAP800101HDFRRN07"
+      },
+      "EMP002": {
+        nombre: "Laura Gómez",
+        sangre: "A-",
+        nss: "987654321",
+        curp: "LAUG900202MDFRML05"
+      }
+    };
+
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
 
-    fetch("empleados.json")
-      .then(response => response.json())
-      .then(empleados => {
-        if (empleados[id]) {
-          document.getElementById("emp-id").textContent = id;
-          document.getElementById("emp-nombre").textContent = empleados[id].nombre;
-          document.getElementById("emp-sangre").textContent = empleados[id].sangre;
-          document.getElementById("emp-nss").textContent = empleados[id].nss;
-          document.getElementById("emp-curp").textContent = empleados[id].curp;
-        } else {
-          document.querySelector(".credencial").innerHTML = `<h2>No se encontró el empleado con ID: ${id}</h2>`;
-        }
-      })
-      .catch(error => {
-        document.querySelector(".credencial").innerHTML = `<h2>Error al cargar los datos del empleado.</h2>`;
-      });
+    if (empleados[id]) {
+      document.getElementById("emp-id").textContent = id;
+      document.getElementById("emp-nombre").textContent = empleados[id].nombre;
+      document.getElementById("emp-sangre").textContent = empleados[id].sangre;
+      document.getElementById("emp-nss").textContent = empleados[id].nss;
+      document.getElementById("emp-curp").textContent = empleados[id].curp;
+    } else {
+      document.querySelector(".credencial").innerHTML = `<h2>No se encontró el empleado con ID: ${id}</h2>`;
+    }
   </script>
 </body>
 </html>
+
