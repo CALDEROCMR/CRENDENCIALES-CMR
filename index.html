@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Centro Médico Regional - Empleados</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f4f8;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #007bff;
+      margin-bottom: 30px;
+    }
+    form {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      max-width: 500px;
+      margin: 0 auto 30px;
+    }
+    input {
+      padding: 10px;
+      margin: 10px;
+      width: calc(100% - 40px);
+      max-width: 400px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .empleado {
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+      max-width: 400px;
+      position: relative;
+      border: 2px solid #007bff;
+    }
+    canvas {
+      margin-top: 10px;
+    }
+    .descargar {
+      margin-top: 10px;
+      display: block;
+      font-size: 14px;
+      color: #007bff;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .empleado h3 {
+      margin-top: 0;
+      color: #007bff;
+    }
+    .empleado p {
+      text-align: left;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    #qr-reader {
+      width: 100%;
+      max-width: 400px;
+      margin: 20px auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Centro Médico Regional</h1>
+
+  <form id="form-empleado">
+    <input type="text" id="nombre" placeholder="Nombre completo" required><br>
+    <input type="text" id="id" placeholder="ID del empleado" required><br>
+    <input type="text" id="sangre" placeholder="Tipo de sangre" required><br>
+    <input type="text" id="nss" placeholder="Número de Seguro Social" required><br>
+    <input type="text" id="curp" placeholder="CURP" required><br>
+    <button type="submit">Generar QR</button>
+  </form>
+
+  <button onclick="iniciarScanner()">📷 Escanear QR</button>
+  <div id="qr-reader" style="display:none;"></div>
+
+  <div id="contenedor-empleados"></div>
+
+  <script>
+    const form = document.getElementById("form-empleado");
+    const contenedor = document.getElementById("contenedor-empleados");
+
+    form.addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      const nombre = document.getElementById("nombre").value.trim();
+      const id = document.getElementById("id").value.trim();
+      const sangre = document.getElementById("sangre").value.trim();
+      const nss = document.getElementById("nss").value.trim();
+      const curp = document.getElementById("curp").value.trim();
+
+      if (!nombre || !id || !sangre || !nss || !curp) return;
+
+      agregarEmpleado({ id, nombre, sangre, nss, curp });
+      form.reset();
+    });
+
+    function agregarEmpleado(data) {
+      const div = document.createElement("div");
+      div.className = "empleado";
+
+      const titulo = document.createElement("h3");
+      titulo.textContent = data.nombre;
+      div.appendChild(titulo);
+
+      const info = document.createElement("p");
+      info.innerHTML = `<strong>ID:</strong> ${data.id}<br><strong>Tipo de Sangre:</strong> ${data.sangre}<br><strong>NSS:</strong> ${data.nss}<br><strong>CURP:</strong> ${data.curp}`;
+      div.appendChild(info);
+
+      const canvas = document.createElement("canvas");
+      div.appendChild(canvas);
+
+      new QRious({
+        element: canvas,
+        value: JSON.stringify(data),
+        size: 200
+      });
+
+      const linkQR = document.createElement("a");
+      linkQR.textContent = "Descargar solo el QR";
+      linkQR.className = "descargar";
+      linkQR.href = canvas.toDataURL();
+      linkQR.download = `QR_${data.nombre.replace(/\s+/g, '_')}.png`;
+      div.appendChild(linkQR);
+
+      const linkCredencial = document.createElement("a");
+      linkCredencial.textContent = "Descargar credencial completa";
+      linkCredencial.className = "descargar";
+      linkCredencial.href = "#";
+      linkCredencial.onclick = function(e) {
+        e.preventDefault();
+        html2canvas(div).then(canvasCredencial => {
+          const link = document.createElement("a");
+          link.href = canvasCredencial.toDataURL();
+          link.download = `Credencial_${data.nombre.replace(/\s+/g, '_')}.png`;
+          link.click();
+        });
+      };
+      div.appendChild(linkCredencial);
+
+      contenedor.appendChild(div);
+    }
+
+    function iniciarScanner() {
+      const qrReader = document.getElementById("qr-reader");
+      qrReader.style.display = "block";
+
+      const scanner = new Html5Qrcode("qr-reader");
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        qrCodeMessage => {
+          try {
+            const data = JSON.parse(qrCodeMessage);
+            agregarEmpleado(data);
+            scanner.stop();
+            qrReader.style.display = "none";
+          } catch (e) {
+            alert("QR inválido o datos no estructurados correctamente.");
+          }
+        },
+        error => {}
+      );
+    }
+  </script>
+</body>
+</html>
