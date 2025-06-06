@@ -6,7 +6,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-auth-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDoeDtVqup7pZAOmH_uf4ImEPFwT6M1kuM",
@@ -19,90 +18,64 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const auth = firebase.auth();
 
     window.addEventListener('DOMContentLoaded', () => {
-      const loginDiv = document.getElementById("login-section");
       const registroDiv = document.getElementById("registro");
       const vistaDiv = document.getElementById("credencial-view");
-      const logoutBtn = document.getElementById("logout-button");
 
-      auth.onAuthStateChanged(user => {
-        if (user) {
-          loginDiv.style.display = "none";
-          logoutBtn.style.display = "block";
-          iniciarApp();
-        } else {
-          registroDiv.style.display = "block";
-          loginDiv.style.display = "block";
-          logoutBtn.style.display = "none";
-        }
-      });
+      const params = new URLSearchParams(window.location.search);
+      const idParam = params.get("id");
 
-      document.getElementById("login-form").addEventListener("submit", e => {
-        e.preventDefault();
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
-        auth.signInWithEmailAndPassword(email, password).catch(err => alert("Error: " + err.message));
-      });
+      if (idParam) {
+        registroDiv.style.display = "none";
+        db.collection("empleados").doc(idParam).get().then(docSnap => {
+          if (docSnap.exists) {
+            const datos = docSnap.data();
+            document.getElementById("emp-id").textContent = idParam;
+            document.getElementById("emp-nombre").textContent = datos.nombre;
+            document.getElementById("emp-sangre").textContent = datos.sangre;
+            document.getElementById("emp-nss").textContent = datos.nss;
+            document.getElementById("emp-curp").textContent = datos.curp;
+          } else {
+            vistaDiv.innerHTML = `<h2>No se encontró información del empleado con ID: ${idParam}</h2>`;
+          }
+          vistaDiv.style.display = 'block';
+        });
+      } else {
+        registroDiv.style.display = "block";
 
-      logoutBtn.addEventListener("click", () => {
-        auth.signOut();
-        location.reload();
-      });
+        const form = document.getElementById('form-empleado');
+        const resultado = document.getElementById('resultado');
+        const qrCanvas = document.getElementById('qr-canvas');
 
-      function iniciarApp() {
-        const params = new URLSearchParams(window.location.search);
-        const idParam = params.get("id");
-        if (idParam) {
-          registroDiv.style.display = "none";
-          db.collection("empleados").doc(idParam).get().then(docSnap => {
-            if (docSnap.exists) {
-              const datos = docSnap.data();
-              document.getElementById("emp-id").textContent = idParam;
-              document.getElementById("emp-nombre").textContent = datos.nombre;
-              document.getElementById("emp-sangre").textContent = datos.sangre;
-              document.getElementById("emp-nss").textContent = datos.nss;
-              document.getElementById("emp-curp").textContent = datos.curp;
-            } else {
-              vistaDiv.innerHTML = `<h2>No se encontró información del empleado con ID: ${idParam}</h2>`;
-            }
-            vistaDiv.style.display = 'block';
-          });
-        } else {
-          const form = document.getElementById('form-empleado');
-          const resultado = document.getElementById('resultado');
-          const qrCanvas = document.getElementById('qr-canvas');
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
 
-          form.addEventListener('submit', async function(e) {
-            e.preventDefault();
+          const id = document.getElementById('id').value.trim();
+          const nombre = document.getElementById('nombre').value.trim();
+          const sangre = document.getElementById('sangre').value.trim();
+          const nss = document.getElementById('nss').value.trim();
+          const curp = document.getElementById('curp').value.trim();
 
-            const id = document.getElementById('id').value.trim();
-            const nombre = document.getElementById('nombre').value.trim();
-            const sangre = document.getElementById('sangre').value.trim();
-            const nss = document.getElementById('nss').value.trim();
-            const curp = document.getElementById('curp').value.trim();
+          if (!id || !nombre || !sangre || !nss || !curp) return;
 
-            if (!id || !nombre || !sangre || !nss || !curp) return;
+          try {
+            await db.collection("empleados").doc(id).set({ nombre, sangre, nss, curp });
 
-            try {
-              await db.collection("empleados").doc(id).set({ nombre, sangre, nss, curp });
+            document.getElementById('r-id').textContent = id;
+            document.getElementById('r-nombre').textContent = nombre;
+            document.getElementById('r-sangre').textContent = sangre;
+            document.getElementById('r-nss').textContent = nss;
+            document.getElementById('r-curp').textContent = curp;
 
-              document.getElementById('r-id').textContent = id;
-              document.getElementById('r-nombre').textContent = nombre;
-              document.getElementById('r-sangre').textContent = sangre;
-              document.getElementById('r-nss').textContent = nss;
-              document.getElementById('r-curp').textContent = curp;
+            const url = `${window.location.origin}${window.location.pathname}?id=${encodeURIComponent(id)}`;
+            new QRious({ element: qrCanvas, size: 200, value: url });
 
-              const url = `${window.location.origin}${window.location.pathname}?id=${encodeURIComponent(id)}`;
-              new QRious({ element: qrCanvas, size: 200, value: url });
-
-              resultado.style.display = 'block';
-            } catch (e) {
-              console.error("Error registrando empleado:", e);
-            }
-          });
-        }
+            resultado.style.display = 'block';
+          } catch (e) {
+            console.error("Error registrando empleado:", e);
+          }
+        });
       }
     });
   </script>
@@ -158,15 +131,6 @@
 </head>
 <body>
   <h1>Centro Médico Regional</h1>
-  <button id="logout-button" style="display:none; margin-bottom: 20px;">Cerrar sesión</button>
-
-  <div id="login-section" style="display:none">
-    <form id="login-form">
-      <input type="email" id="email" placeholder="Correo del administrador" required>
-      <input type="password" id="password" placeholder="Contraseña" required>
-      <button type="submit">Ingresar</button>
-    </form>
-  </div>
 
   <div id="registro" style="display:none">
     <form id="form-empleado">
@@ -199,3 +163,4 @@
   </div>
 </body>
 </html>
+
