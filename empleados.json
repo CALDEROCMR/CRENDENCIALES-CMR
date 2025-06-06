@@ -1,0 +1,14 @@
+{
+  "EMP001": {
+    "nombre": "Juan Pérez",
+    "sangre": "O+",
+    "nss": "123456789",
+    "curp": "JUAP800101HDFRRN07"
+  },
+  "EMP002": {
+    "nombre": "Laura Gómez",
+    "sangre": "A-",
+    "nss": "987654321",
+    "curp": "LAUG900202MDFRML05"
+  }
+}
