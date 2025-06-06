@@ -4,6 +4,20 @@
   <meta charset="UTF-8">
   <title>Centro Médico Regional - Empleados</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDoeDtVqup7pZAOmH_uf4ImEPFwT6M1kuM",
+      authDomain: "centro-medico-1a8db.firebaseapp.com",
+      projectId: "centro-medico-1a8db",
+      storageBucket: "centro-medico-1a8db.appspot.com",
+      messagingSenderId: "990164493310",
+      appId: "1:990164493310:web:8ce54c5e15d7805246d6af"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -92,25 +106,23 @@
     const idParam = params.get("id");
 
     if (idParam) {
-      // Modo visualización de empleado
       document.getElementById("registro").style.display = "none";
-      const empleados = JSON.parse(localStorage.getItem("empleados")) || {};
-      const datos = empleados[idParam];
       const view = document.getElementById("credencial-view");
 
-      if (datos) {
-        document.getElementById("emp-id").textContent = idParam;
-        document.getElementById("emp-nombre").textContent = datos.nombre;
-        document.getElementById("emp-sangre").textContent = datos.sangre;
-        document.getElementById("emp-nss").textContent = datos.nss;
-        document.getElementById("emp-curp").textContent = datos.curp;
-      } else {
-        view.innerHTML = `<h2>No se encontró información del empleado con ID: ${idParam}</h2>`;
-      }
-
-      view.style.display = 'block';
+      db.collection("empleados").doc(idParam).get().then(doc => {
+        if (doc.exists) {
+          const datos = doc.data();
+          document.getElementById("emp-id").textContent = idParam;
+          document.getElementById("emp-nombre").textContent = datos.nombre;
+          document.getElementById("emp-sangre").textContent = datos.sangre;
+          document.getElementById("emp-nss").textContent = datos.nss;
+          document.getElementById("emp-curp").textContent = datos.curp;
+        } else {
+          view.innerHTML = `<h2>No se encontró información del empleado con ID: ${idParam}</h2>`;
+        }
+        view.style.display = 'block';
+      });
     } else {
-      // Modo registro de nuevo empleado
       const form = document.getElementById('form-empleado');
       const resultado = document.getElementById('resultado');
       const qrCanvas = document.getElementById('qr-canvas');
@@ -126,27 +138,20 @@
 
         if (!id || !nombre || !sangre || !nss || !curp) return;
 
-        const empleados = JSON.parse(localStorage.getItem("empleados")) || {};
-        empleados[id] = { nombre, sangre, nss, curp };
-        localStorage.setItem("empleados", JSON.stringify(empleados));
+        db.collection("empleados").doc(id).set({ nombre, sangre, nss, curp }).then(() => {
+          document.getElementById('r-id').textContent = id;
+          document.getElementById('r-nombre').textContent = nombre;
+          document.getElementById('r-sangre').textContent = sangre;
+          document.getElementById('r-nss').textContent = nss;
+          document.getElementById('r-curp').textContent = curp;
 
-        // Mostrar datos
-        document.getElementById('r-id').textContent = id;
-        document.getElementById('r-nombre').textContent = nombre;
-        document.getElementById('r-sangre').textContent = sangre;
-        document.getElementById('r-nss').textContent = nss;
-        document.getElementById('r-curp').textContent = curp;
+          const url = `${window.location.origin}${window.location.pathname}?id=${encodeURIComponent(id)}`;
+          new QRious({ element: qrCanvas, size: 200, value: url });
 
-        // Crear QR con enlace a esta misma página
-        const url = `${window.location.origin}${window.location.pathname}?id=${encodeURIComponent(id)}`;
-
-        new QRious({
-          element: qrCanvas,
-          size: 200,
-          value: url
+          resultado.style.display = 'block';
+        }).catch(err => {
+          alert("Error al guardar el empleado: " + err);
         });
-
-        resultado.style.display = 'block';
       });
     }
   </script>
