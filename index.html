@@ -33,6 +33,7 @@
           logoutBtn.style.display = "block";
           iniciarApp();
         } else {
+          registroDiv.style.display = "block";
           loginDiv.style.display = "block";
           logoutBtn.style.display = "none";
         }
@@ -51,7 +52,6 @@
       });
 
       function iniciarApp() {
-        registroDiv.style.display = "block";
         const params = new URLSearchParams(window.location.search);
         const idParam = params.get("id");
         if (idParam) {
@@ -199,4 +199,3 @@
   </div>
 </body>
 </html>
-
