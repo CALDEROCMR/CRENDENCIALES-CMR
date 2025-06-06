@@ -51,10 +51,9 @@
       });
 
       function iniciarApp() {
+        registroDiv.style.display = "block";
         const params = new URLSearchParams(window.location.search);
-        const idParam = params.get("id");
-
-        if (idParam) {
+        const idParam = params.get("id"); {
           registroDiv.style.display = "none";
           db.collection("empleados").doc(idParam).get().then(docSnap => {
             if (docSnap.exists) {
@@ -199,4 +198,3 @@
   </div>
 </body>
 </html>
-
