@@ -1,533 +1,63 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro Médico Regional - Empleados</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Font: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- QRious for QR Code generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-    <!-- HTML2Canvas for credential download -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <!-- HTML5-QRCode for QR Scanning -->
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <style>
-        /* Custom styles to override or extend Tailwind if necessary, primarily for responsiveness and specific elements */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8;
-            @apply flex flex-col min-h-screen items-center p-4 sm:p-6 md:p-8; /* Apply Tailwind for responsive padding and centering */
-        }
-        h1 {
-            @apply text-4xl font-extrabold text-blue-700 mb-8 sm:mb-10 text-center;
-        }
-        h2 {
-            @apply text-2xl font-bold text-blue-600 mb-6;
-        }
-        form, #qr-reader, .employee-section {
-            @apply bg-white p-6 sm:p-8 rounded-xl shadow-lg w-full max-w-lg mb-8;
-        }
-        input {
-            @apply block w-full p-3 mb-4 border border-gray-300 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-400 focus:border-transparent;
-        }
-        button {
-            @apply bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-300 shadow-md;
-        }
-        button.secondary {
-            @apply bg-gray-500 hover:bg-gray-600 ml-4;
-        }
-        .employee-card {
-            @apply relative bg-white p-6 rounded-xl shadow-lg border-2 border-blue-500 flex flex-col items-center mb-6;
-            width: 100%; /* Ensure it takes full width within its container */
-            max-width: 400px; /* Constrain max width for aesthetics */
-            box-sizing: border-box; /* Include padding/border in width */
-        }
-        .employee-card h3 {
-            @apply text-xl font-bold text-blue-700 mb-2;
-        }
-        .employee-card p {
-            @apply text-sm text-gray-700 text-center mb-4;
-            word-break: break-word; /* Ensure long text wraps */
-        }
-        canvas {
-            @apply mt-4 rounded-md;
-        }
-        .download-link {
-            @apply mt-3 text-sm text-blue-600 hover:text-blue-800 underline block cursor-pointer;
-        }
-        .flex-container {
-            @apply flex flex-wrap justify-center gap-6 mt-8;
-        }
-        #qr-reader-container {
-            @apply w-full max-w-md mx-auto;
-        }
-
-        /* Custom Modal Styles */
-        .custom-modal-overlay {
-            @apply fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-            opacity: 0;
-            visibility: hidden;
-        }
-        .custom-modal-overlay.visible {
-            opacity: 1;
-            visibility: visible;
-        }
-        .custom-modal-content {
-            @apply bg-white p-8 rounded-xl shadow-2xl text-center max-w-sm w-11/12 transform scale-95;
-            transition: transform 0.3s ease;
-        }
-        .custom-modal-overlay.visible .custom-modal-content {
-            transform: scale(1);
-        }
-        .custom-modal-content h3 {
-            @apply text-2xl font-bold text-blue-700 mb-4;
-        }
-        .custom-modal-content p {
-            @apply text-gray-700 mb-6;
-        }
-        .custom-modal-buttons {
-            @apply flex justify-center space-x-4;
-        }
-        .custom-modal-buttons button {
-            @apply py-2 px-5 rounded-lg font-semibold transition-colors duration-200;
-        }
-        .custom-modal-buttons .confirm-btn {
-            @apply bg-blue-600 text-white hover:bg-blue-700;
-        }
-        .custom-modal-buttons .cancel-btn {
-            @apply bg-gray-300 text-gray-800 hover:bg-gray-400;
-        }
-
-        /* Loading Spinner */
-        .loading-spinner {
-            @apply border-4 border-t-4 border-blue-200 border-t-blue-600 rounded-full w-12 h-12 animate-spin mx-auto my-8;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Empleado - Centro Médico Regional</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eef4f8;
+      text-align: center;
+      padding: 40px;
+    }
+    .credencial {
+      max-width: 400px;
+      margin: auto;
+      padding: 20px;
+      background-color: #fff;
+      border: 2px solid #007bff;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .credencial h2 {
+      color: #007bff;
+    }
+    .credencial p {
+      font-size: 16px;
+      text-align: left;
+    }
+  </style>
 </head>
-<body class="bg-gray-50 flex flex-col items-center">
-    <h1 class="text-5xl font-extrabold text-blue-700 mt-8 mb-4">Centro Médico Regional</h1>
-    <p id="user-id-display" class="text-sm text-gray-600 mb-8"></p>
+<body>
+  <div class="credencial">
+    <h2>Datos del Empleado</h2>
+    <p><strong>ID:</strong> <span id="emp-id"></span></p>
+    <p><strong>Nombre:</strong> <span id="emp-nombre"></span></p>
+    <p><strong>Tipo de Sangre:</strong> <span id="emp-sangre"></span></p>
+    <p><strong>NSS:</strong> <span id="emp-nss"></span></p>
+    <p><strong>CURP:</strong> <span id="emp-curp"></span></p>
+  </div>
 
-    <div id="loading-indicator" class="loading-spinner"></div>
-    <div id="app-content" class="hidden w-full max-w-4xl px-4">
-        <h2 class="text-3xl font-bold text-blue-600 text-center mb-8">Gestión de Empleados</h2>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
 
-        <!-- Employee Form Section -->
-        <div class="employee-section">
-            <h3 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Generar Credencial de Empleado</h3>
-            <form id="employee-form" class="shadow-none p-0">
-                <input type="text" id="nombre" placeholder="Nombre completo" required class="block w-full">
-                <input type="text" id="id" placeholder="ID del empleado" required class="block w-full">
-                <input type="text" id="sangre" placeholder="Tipo de sangre" required class="block w-full">
-                <input type="text" id="nss" placeholder="Número de Seguro Social" required class="block w-full">
-                <input type="text" id="curp" placeholder="CURP" required class="block w-full">
-                <button type="submit" class="w-full">Generar y Guardar Credencial</button>
-            </form>
-        </div>
-
-        <!-- QR Scanner Section -->
-        <div class="employee-section text-center">
-            <h3 class="text-2xl font-semibold text-gray-800 mb-6">Escanear Credencial Existente</h3>
-            <button id="start-scanner-btn" class="w-auto px-8">📷 Escanear QR</button>
-            <div id="qr-reader" class="hidden mt-6 mx-auto w-full max-w-md"></div>
-            <button id="stop-scanner-btn" class="secondary mt-4 w-auto px-8 hidden">Detener Escáner</button>
-        </div>
-
-        <!-- Display Existing Employees Section -->
-        <div class="employee-section">
-            <h3 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Empleados Guardados</h3>
-            <div id="employees-list" class="flex flex-wrap justify-center gap-6">
-                <p class="text-gray-500">Cargando empleados...</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Custom Modal HTML -->
-    <div id="customModal" class="custom-modal-overlay">
-        <div class="custom-modal-content">
-            <h3 id="modalTitle"></h3>
-            <p id="modalMessage"></p>
-            <div class="custom-modal-buttons">
-                <button id="modalConfirmBtn" class="confirm-btn">Aceptar</button>
-                <button id="modalCancelBtn" class="cancel-btn hidden">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <script type="module">
-        // Firebase CDN Imports
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        let db;
-        let auth;
-        let userId = 'anonymous'; // Default to anonymous
-        let qrScanner = null; // To manage the HTML5 QR scanner instance
-        const BASE_URL = 'https://calderocmr.github.io/CRENDENCIALES-CMR/'; // Define the base URL for your GitHub Pages site
-
-        // Custom Modal Functions (re-defined for modularity)
-        let resolveModalPromise;
-        function showCustomModal(message, type = 'alert', title = 'Mensaje') {
-            return new Promise((resolve) => {
-                const modal = document.getElementById('customModal');
-                const modalTitle = document.getElementById('modalTitle');
-                const modalMessage = document.getElementById('modalMessage');
-                const confirmBtn = document.getElementById('modalConfirmBtn');
-                const cancelBtn = document.getElementById('modalCancelBtn');
-
-                modalTitle.textContent = title;
-                modalMessage.textContent = message;
-                resolveModalPromise = resolve;
-
-                confirmBtn.onclick = () => { hideCustomModal(); resolve(true); };
-                if (type === 'confirm') {
-                    cancelBtn.classList.remove('hidden');
-                    cancelBtn.onclick = () => { hideCustomModal(); resolve(false); };
-                } else {
-                    cancelBtn.classList.add('hidden');
-                }
-                modal.classList.add('visible');
-            });
+    fetch("empleados.json")
+      .then(response => response.json())
+      .then(empleados => {
+        if (empleados[id]) {
+          document.getElementById("emp-id").textContent = id;
+          document.getElementById("emp-nombre").textContent = empleados[id].nombre;
+          document.getElementById("emp-sangre").textContent = empleados[id].sangre;
+          document.getElementById("emp-nss").textContent = empleados[id].nss;
+          document.getElementById("emp-curp").textContent = empleados[id].curp;
+        } else {
+          document.querySelector(".credencial").innerHTML = `<h2>No se encontró el empleado con ID: ${id}</h2>`;
         }
-
-        function hideCustomModal() {
-            document.getElementById('customModal').classList.remove('visible');
-        }
-
-        /**
-         * Initializes Firebase and sets up authentication.
-         * Displays a loading spinner until auth is ready and data listener is set.
-         */
-        async function initializeFirebaseAndAuth() {
-            const loadingIndicator = document.getElementById('loading-indicator');
-            const appContent = document.getElementById('app-content');
-            loadingIndicator.classList.remove('hidden');
-            appContent.classList.add('hidden');
-
-            try {
-                // IMPORTANT: Use __firebase_config and __initial_auth_token provided by the environment
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-
-                if (!firebaseConfig) {
-                    console.error("Firebase config is not available. Please provide it for Firestore to work.");
-                    await showCustomModal("Error: Firebase no configurado. No se podrá guardar la información de forma persistente.", 'alert', 'Error de Configuración');
-                    loadingIndicator.classList.add('hidden');
-                    appContent.classList.remove('hidden');
-                    return;
-                }
-
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                // Listen for auth state changes
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        console.log(`DEBUG: Firebase: Signed in as ${userId}`);
-                        document.getElementById('user-id-display').textContent = `ID de Usuario: ${userId}`;
-                        setupFirestoreListener(); // Setup listener only after auth is ready
-                        loadingIndicator.classList.add('hidden');
-                        appContent.classList.remove('hidden');
-                    } else {
-                        console.log("DEBUG: Firebase: No user signed in. Attempting anonymous sign-in.");
-                        document.getElementById('user-id-display').textContent = 'ID de Usuario: Anónimo (datos no persistentes si no hay conexión)';
-                        try {
-                            // If initial token is not provided, sign in anonymously.
-                            if (typeof __initial_auth_token !== 'undefined') {
-                                await signInWithCustomToken(auth, __initial_auth_token);
-                            } else {
-                                await signInAnonymously(auth);
-                            }
-                        } catch (error) {
-                            console.error("DEBUG: Firebase: Anonymous sign-in failed:", error);
-                            await showCustomModal(`Error al iniciar sesión anónimamente: ${error.message}`, 'alert', 'Error de Autenticación');
-                            loadingIndicator.classList.add('hidden');
-                            appContent.classList.remove('hidden');
-                        }
-                    }
-                });
-
-            } catch (error) {
-                console.error("DEBUG: Firebase: Initialization failed:", error);
-                await showCustomModal(`Error al inicializar Firebase: ${error.message}`, 'alert', 'Error de Inicialización');
-                loadingIndicator.classList.add('hidden');
-                appContent.classList.remove('hidden');
-            }
-        }
-
-        /**
-         * Sets up the real-time Firestore listener for employee data.
-         * Data is stored in /artifacts/{appId}/users/{userId}/employees
-         */
-        function setupFirestoreListener() {
-            if (!db || !userId) {
-                console.warn("Firestore or User ID not ready for listener setup.");
-                return;
-            }
-
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const employeesCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/employees`);
-            const employeesListDiv = document.getElementById('employees-list');
-            employeesListDiv.innerHTML = '<p class="text-gray-500">Cargando empleados...</p>'; // Show loading
-
-            onSnapshot(employeesCollectionRef, (snapshot) => {
-                const employees = [];
-                snapshot.forEach(doc => {
-                    employees.push({ id: doc.id, ...doc.data() });
-                });
-                displayEmployees(employees);
-            }, (error) => {
-                console.error("Error listening to employees collection:", error);
-                showCustomModal(`Error al cargar empleados: ${error.message}`, 'alert', 'Error de Carga');
-                employeesListDiv.innerHTML = '<p class="text-red-500">Error al cargar empleados.</p>';
-            });
-        }
-
-        // Display employees from Firestore
-        function displayEmployees(employees) {
-            const employeesListDiv = document.getElementById('employees-list');
-            employeesListDiv.innerHTML = ''; // Clear previous list
-
-            if (employees.length === 0) {
-                employeesListDiv.innerHTML = '<p class="text-gray-500">No hay empleados guardados aún. Genera una credencial.</p>';
-                return;
-            }
-
-            employees.forEach(emp => {
-                const div = document.createElement("div");
-                div.className = "employee-card";
-                // Construct the URL for the details page
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const employeeDetailsUrl = `${BASE_URL}employee_details.html?docId=${emp.id}&creatorId=${userId}&appId=${appId}`;
-
-                div.innerHTML = `
-                    <h3 class="font-playfair-display">${emp.nombre}</h3>
-                    <p><strong>ID:</strong> ${emp.employeeId}</p>
-                    <p><strong>Tipo de Sangre:</strong> ${emp.bloodType}</p>
-                    <p><strong>NSS:</strong> ${emp.nss}</p>
-                    <p><strong>CURP:</strong> ${emp.curp}</p>
-                    <canvas id="qr-${emp.id}" class="mt-4 rounded-md"></canvas>
-                    <a href="${employeeDetailsUrl}" target="_blank" class="download-link">Ver detalles (URL del QR)</a>
-                    <a href="#" class="download-link" data-type="qr" data-id="${emp.id}">Descargar solo el QR (Imagen)</a>
-                    <a href="#" class="download-link" data-type="card" data-id="${emp.id}">Descargar credencial completa (Imagen)</a>
-                    <button class="delete-employee-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg mt-4" data-id="${emp.id}">Eliminar</button>
-                `;
-                employeesListDiv.appendChild(div);
-
-                // Generate QR code with the URL
-                new QRious({
-                    element: document.getElementById(`qr-${emp.id}`),
-                    value: employeeDetailsUrl, // QR now contains the URL
-                    size: 200
-                });
-            });
-
-            // Add event listeners for download and delete buttons
-            employeesListDiv.querySelectorAll('.download-link').forEach(link => {
-                link.onclick = async function(e) {
-                    // Only prevent default for image downloads, not for the URL link
-                    if (this.dataset.type === 'qr' || this.dataset.type === 'card') {
-                        e.preventDefault();
-                    } else {
-                        return; // Let the browser handle the URL link
-                    }
-                    
-                    const employeeDocId = this.dataset.id;
-                    const type = this.dataset.type;
-                    const employeeCard = this.closest('.employee-card');
-
-                    if (type === 'qr') {
-                        const canvas = employeeCard.querySelector(`#qr-${employeeDocId}`);
-                        const tempLink = document.createElement("a");
-                        tempLink.href = canvas.toDataURL();
-                        tempLink.download = `QR_${employeeCard.querySelector('h3').textContent.replace(/\s+/g, '_')}.png`;
-                        tempLink.click();
-                    } else if (type === 'card') {
-                         await html2canvas(employeeCard, {
-                            scale: 2, // Higher scale for better quality
-                            useCORS: true,
-                            logging: false,
-                            backgroundColor: '#ffffff' // Ensure white background
-                        }).then(canvasCredencial => {
-                            const tempLink = document.createElement("a");
-                            tempLink.href = canvasCredencial.toDataURL('image/png');
-                            tempLink.download = `Credencial_${employeeCard.querySelector('h3').textContent.replace(/\s+/g, '_')}.png`;
-                            tempLink.click();
-                        });
-                    }
-                };
-            });
-
-            employeesListDiv.querySelectorAll('.delete-employee-btn').forEach(button => {
-                button.onclick = async function() {
-                    const employeeDocId = this.dataset.id;
-                    const confirmed = await showCustomModal('¿Estás seguro de que quieres eliminar este empleado? Esta acción no se puede deshacer.', 'confirm', 'Confirmar Eliminación');
-                    if (confirmed) {
-                        try {
-                            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                            await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/employees`, employeeDocId));
-                            showCustomModal('Empleado eliminado con éxito.', 'alert', 'Eliminado');
-                        } catch (e) {
-                            console.error("Error deleting employee:", e);
-                            showCustomModal(`Error al eliminar empleado: ${e.message}`, 'alert', 'Error');
-                        }
-                    }
-                };
-            });
-        }
-
-
-        // Handle employee form submission
-        document.getElementById('employee-form').addEventListener('submit', async function(event) {
-            event.preventDefault();
-
-            if (!db || !userId) {
-                await showCustomModal('La base de datos no está lista. Inténtalo de nuevo en unos segundos.', 'alert', 'Error');
-                return;
-            }
-
-            const employeeData = {
-                nombre: document.getElementById('nombre').value.trim(),
-                employeeId: document.getElementById('id').value.trim(),
-                bloodType: document.getElementById('sangre').value.trim(),
-                nss: document.getElementById('nss').value.trim(),
-                curp: document.getElementById('curp').value.trim(),
-                createdAt: new Date().toISOString() // Timestamp for sorting
-            };
-
-            if (!employeeData.nombre || !employeeData.employeeId || !employeeData.bloodType || !employeeData.nss || !employeeData.curp) {
-                await showCustomModal('Por favor, completa todos los campos del formulario.', 'alert', 'Campos Incompletos');
-                return;
-            }
-
-            const confirmed = await showCustomModal(`¿Guardar credencial para ${employeeData.nombre}?`, 'confirm', 'Confirmar Guardado');
-            if (!confirmed) return;
-
-            try {
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const employeesCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/employees`);
-                // Check for duplicate employeeId before adding
-                const q = query(employeesCollectionRef, where("employeeId", "==", employeeData.employeeId));
-                const querySnapshot = await getDocs(q);
-                
-                if (!querySnapshot.empty) { // Check if querySnapshot.empty is defined and true
-                    await showCustomModal(`El ID de empleado '${employeeData.employeeId}' ya existe.`, 'alert', 'Duplicado');
-                    return;
-                }
-
-
-                await addDoc(employeesCollectionRef, employeeData);
-                await showCustomModal('Credencial generada y guardada con éxito.', 'alert', 'Éxito');
-                this.reset(); // Clear form
-            } catch (e) {
-                console.error("Error adding document:", e);
-                await showCustomModal(`Error al guardar credencial: ${e.message}`, 'alert', 'Error');
-            }
-        });
-
-        // Initialize QR Scanner
-        document.getElementById('start-scanner-btn').addEventListener('click', function() {
-            const qrReaderElement = document.getElementById('qr-reader');
-            qrReaderElement.classList.remove('hidden');
-            document.getElementById('stop-scanner-btn').classList.remove('hidden');
-
-            if (!qrScanner) {
-                qrScanner = new Html5Qrcode("qr-reader");
-            }
-
-            // Request camera permissions explicitly to prevent issues
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-                .then(stream => {
-                    // Stop any existing tracks to release camera
-                    stream.getTracks().forEach(track => track.stop());
-
-                    qrScanner.start(
-                        { facingMode: "environment" },
-                        { fps: 10, qrbox: 250 },
-                        async (qrCodeMessage) => {
-                            // Check if the scanned QR code is a URL from our site
-                            if (qrCodeMessage.startsWith(BASE_URL + 'employee_details.html')) {
-                                await showCustomModal('QR escaneado es una URL de empleado. Abriendo en una nueva pestaña...', 'alert', 'Redireccionando');
-                                window.open(qrCodeMessage, '_blank');
-                                stopScanner();
-                                return; // Stop processing if it's a URL
-                            }
-
-                            // Original logic for JSON data (for backward compatibility if needed)
-                            try {
-                                const scannedData = JSON.parse(qrCodeMessage);
-                                if (scannedData.nombre && scannedData.employeeId) {
-                                    // Check if employee already exists in Firestore by employeeId
-                                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                                    const employeesCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/employees`);
-                                    const q = query(employeesCollectionRef, where("employeeId", "==", scannedData.employeeId));
-                                    const querySnapshot = await getDocs(q);
-                                    
-                                    if (querySnapshot.empty) {
-                                        // If employee does not exist, add them
-                                        await addDoc(employeesCollectionRef, {
-                                            nombre: scannedData.nombre,
-                                            employeeId: scannedData.employeeId,
-                                            bloodType: scannedData.bloodType || '',
-                                            nss: scannedData.nss || '',
-                                            curp: scannedData.curp || '',
-                                            createdAt: new Date().toISOString()
-                                        });
-                                        await showCustomModal(`Empleado '${scannedData.nombre}' añadido con éxito.`, 'alert', 'Empleado Añadido');
-                                    } else {
-                                        await showCustomModal(`El empleado '${scannedData.nombre}' (ID: ${scannedData.employeeId}) ya existe.`, 'alert', 'Empleado Existente');
-                                    }
-                                } else {
-                                    await showCustomModal('QR escaneado no contiene datos de empleado válidos.', 'alert', 'Datos Inválidos');
-                                }
-                            } catch (e) {
-                                // If it's not a URL and not valid JSON
-                                console.error("Error processing QR code (not URL, not JSON):", e);
-                                await showCustomModal(`QR escaneado no es una URL de empleado ni un QR de datos válido.`, 'alert', 'QR Desconocido');
-                            } finally {
-                                stopScanner();
-                            }
-                        },
-                        error => {
-                            // console.warn(`QR scan error: ${error}`); // Too noisy
-                            if (error.name === 'NotAllowedError' || error.name === 'NotFoundError') {
-                                showCustomModal('Permiso de cámara denegado o no hay cámara disponible.', 'alert', 'Error de Cámara');
-                                stopScanner();
-                            }
-                        }
-                    );
-                })
-                .catch(err => {
-                    console.error("Error accessing camera:", err);
-                    showCustomModal(`No se pudo acceder a la cámara: ${err.message}. Asegúrate de conceder los permisos.`, 'alert', 'Error de Cámara');
-                    stopScanner();
-                });
-        });
-
-        document.getElementById('stop-scanner-btn').addEventListener('click', stopScanner);
-
-        function stopScanner() {
-            if (qrScanner && typeof qrScanner.stop === 'function') {
-                qrScanner.stop().then(() => {
-                    console.log("QR scanner stopped.");
-                    document.getElementById('qr-reader').classList.add('hidden');
-                    document.getElementById('stop-scanner-btn').classList.add('hidden');
-                }).catch(err => {
-                    console.error("Error stopping QR scanner:", err);
-                    showCustomModal(`Error al detener el escáner: ${err.message}`, 'alert', 'Error de Escáner');
-                });
-            }
-        }
-
-
-        // Initialize Firebase when DOM is ready
-        document.addEventListener('DOMContentLoaded', initializeFirebaseAndAuth);
-    </script>
+      })
+      .catch(error => {
+        document.querySelector(".credencial").innerHTML = `<h2>Error al cargar los datos del empleado.</h2>`;
+      });
+  </script>
 </body>
 </html>
