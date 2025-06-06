@@ -2,34 +2,83 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Empleado - Centro Médico Regional</title>
+  <title>Centro Médico Regional - Empleados</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       background-color: #eef4f8;
-      text-align: center;
       padding: 40px;
+      text-align: center;
     }
-    .credencial {
-      max-width: 400px;
-      margin: auto;
+    h1 {
+      color: #007bff;
+      margin-bottom: 20px;
+    }
+    form, .credencial {
+      background: white;
       padding: 20px;
-      background-color: #fff;
-      border: 2px solid #007bff;
-      border-radius: 12px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      max-width: 500px;
+      margin: 20px auto;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    input {
+      display: block;
+      width: calc(100% - 20px);
+      margin: 10px auto;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
     }
     .credencial h2 {
       color: #007bff;
     }
     .credencial p {
-      font-size: 16px;
       text-align: left;
+      font-size: 16px;
+    }
+    canvas {
+      margin-top: 15px;
     }
   </style>
 </head>
 <body>
-  <div class="credencial">
+  <h1>Centro Médico Regional</h1>
+
+  <div id="registro">
+    <form id="form-empleado">
+      <input type="text" id="id" placeholder="ID del empleado" required>
+      <input type="text" id="nombre" placeholder="Nombre completo" required>
+      <input type="text" id="sangre" placeholder="Tipo de sangre" required>
+      <input type="text" id="nss" placeholder="Número de Seguro Social" required>
+      <input type="text" id="curp" placeholder="CURP" required>
+      <button type="submit">Registrar y Generar QR</button>
+    </form>
+
+    <div id="resultado" class="credencial" style="display:none">
+      <h2>Credencial del Empleado</h2>
+      <p><strong>ID:</strong> <span id="r-id"></span></p>
+      <p><strong>Nombre:</strong> <span id="r-nombre"></span></p>
+      <p><strong>Tipo de Sangre:</strong> <span id="r-sangre"></span></p>
+      <p><strong>NSS:</strong> <span id="r-nss"></span></p>
+      <p><strong>CURP:</strong> <span id="r-curp"></span></p>
+      <canvas id="qr-canvas"></canvas>
+    </div>
+  </div>
+
+  <div id="credencial-view" class="credencial" style="display:none">
     <h2>Datos del Empleado</h2>
     <p><strong>ID:</strong> <span id="emp-id"></span></p>
     <p><strong>Nombre:</strong> <span id="emp-nombre"></span></p>
@@ -39,34 +88,67 @@
   </div>
 
   <script>
-    const empleados = {
-      "EMP001": {
-        nombre: "Juan Pérez",
-        sangre: "O+",
-        nss: "123456789",
-        curp: "JUAP800101HDFRRN07"
-      },
-      "EMP002": {
-        nombre: "Laura Gómez",
-        sangre: "A-",
-        nss: "987654321",
-        curp: "LAUG900202MDFRML05"
-      }
-    };
-
     const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
+    const idParam = params.get("id");
 
-    if (empleados[id]) {
-      document.getElementById("emp-id").textContent = id;
-      document.getElementById("emp-nombre").textContent = empleados[id].nombre;
-      document.getElementById("emp-sangre").textContent = empleados[id].sangre;
-      document.getElementById("emp-nss").textContent = empleados[id].nss;
-      document.getElementById("emp-curp").textContent = empleados[id].curp;
+    if (idParam) {
+      // Modo visualización de empleado
+      document.getElementById("registro").style.display = "none";
+      const empleados = JSON.parse(localStorage.getItem("empleados")) || {};
+      const datos = empleados[idParam];
+      const view = document.getElementById("credencial-view");
+
+      if (datos) {
+        document.getElementById("emp-id").textContent = idParam;
+        document.getElementById("emp-nombre").textContent = datos.nombre;
+        document.getElementById("emp-sangre").textContent = datos.sangre;
+        document.getElementById("emp-nss").textContent = datos.nss;
+        document.getElementById("emp-curp").textContent = datos.curp;
+      } else {
+        view.innerHTML = `<h2>No se encontró información del empleado con ID: ${idParam}</h2>`;
+      }
+
+      view.style.display = 'block';
     } else {
-      document.querySelector(".credencial").innerHTML = `<h2>No se encontró el empleado con ID: ${id}</h2>`;
+      // Modo registro de nuevo empleado
+      const form = document.getElementById('form-empleado');
+      const resultado = document.getElementById('resultado');
+      const qrCanvas = document.getElementById('qr-canvas');
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const id = document.getElementById('id').value.trim();
+        const nombre = document.getElementById('nombre').value.trim();
+        const sangre = document.getElementById('sangre').value.trim();
+        const nss = document.getElementById('nss').value.trim();
+        const curp = document.getElementById('curp').value.trim();
+
+        if (!id || !nombre || !sangre || !nss || !curp) return;
+
+        const empleados = JSON.parse(localStorage.getItem("empleados")) || {};
+        empleados[id] = { nombre, sangre, nss, curp };
+        localStorage.setItem("empleados", JSON.stringify(empleados));
+
+        // Mostrar datos
+        document.getElementById('r-id').textContent = id;
+        document.getElementById('r-nombre').textContent = nombre;
+        document.getElementById('r-sangre').textContent = sangre;
+        document.getElementById('r-nss').textContent = nss;
+        document.getElementById('r-curp').textContent = curp;
+
+        // Crear QR con enlace a esta misma página
+        const url = `${window.location.origin}${window.location.pathname}?id=${encodeURIComponent(id)}`;
+
+        new QRious({
+          element: qrCanvas,
+          size: 200,
+          value: url
+        });
+
+        resultado.style.display = 'block';
+      });
     }
   </script>
 </body>
 </html>
-
